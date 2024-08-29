@@ -1,7 +1,10 @@
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+
 from database import Base
-from datetime import datetime
+
 
 class User(Base):
     __tablename__ = "users"
@@ -11,6 +14,7 @@ class User(Base):
     hashed_password = Column(String)
 
     messages = relationship("Message", back_populates="owner")
+
 
 class Message(Base):
     __tablename__ = "messages"
