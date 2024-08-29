@@ -19,7 +19,11 @@ from database import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
 
 
+token_blacklist = set()
+
+
 app = FastAPI()
+
 
 # Add CORS middleware to allow requests from the frontend
 app.add_middleware(
@@ -74,6 +78,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if token in token_blacklist:
+        raise credentials_exception
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -118,6 +124,13 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/logout")
+async def logout(token: str = Depends(oauth2_scheme)):
+    token_blacklist.add(token)
+    return {"msg": "Successfully logged out"}
+
 
 
 @app.post("/messages/", response_model=schemas.Message)

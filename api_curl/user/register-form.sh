@@ -1,0 +1,1 @@
+curl -X POST "http://localhost:8003/register-form" -H "Content-Type: application/x-www-form-urlencoded" -d "username=admin&password=admin"
