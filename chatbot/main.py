@@ -18,12 +18,9 @@ from database import SessionLocal, engine
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
 
-
 token_blacklist = set()
 
-
 app = FastAPI()
-
 
 # Add CORS middleware to allow requests from the frontend
 app.add_middleware(
@@ -33,8 +30,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
-
-
 
 # Authentication setup
 SECRET_KEY = "your_secret_key"
@@ -101,7 +96,6 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-
 @app.post("/register-form", response_model=schemas.User)
 def register_user_form(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     db_user = crud.get_user_by_username(db, username=username)
@@ -109,6 +103,7 @@ def register_user_form(username: str = Form(...), password: str = Form(...), db:
         raise HTTPException(status_code=400, detail="Username already registered")
     user = schemas.UserCreate(username=username, password=password)
     return crud.create_user(db=db, user=user)
+
 
 @app.post("/token", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -132,17 +127,27 @@ async def logout(token: str = Depends(oauth2_scheme)):
     return {"msg": "Successfully logged out"}
 
 
-
-@app.post("/messages/", response_model=schemas.Message)
+# @app.post("/messages/", response_model=schemas.Message)
+@app.post("/messages/", response_model=schemas.MessageServerResponse)
 def create_message(message: schemas.MessageCreate, db: Session = Depends(get_db),
                    current_user: models.User = Depends(get_current_user)):
-    return crud.create_message(db=db, message=message, user_id=current_user.id)
+    import time
+    time.sleep(4)
+    create_message_response = crud.create_message(db=db, message=message, user_id=current_user.id)
+
+    # generate code to insert a new message record into the database, corresponding to the servers response
+    server_message = schemas.MessageCreate(content="Server says: " + message.content)
+    server_response = crud.create_message(db=db, message=server_message, user_id=0)
+
+    res = {"message_create_response": create_message_response, "server_response": server_response}
+    print(res)
+    return res
 
 
 @app.get("/messages/", response_model=List[schemas.Message])
 def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
-    messages = crud.get_messages(db, skip=skip, limit=limit)
+    messages = crud.get_messages(db, user_id=current_user.id, skip=skip, limit=limit)
     return messages
 
 

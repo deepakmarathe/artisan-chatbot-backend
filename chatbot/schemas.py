@@ -24,6 +24,12 @@ class Message(MessageBase):
     class Config:
         orm_mode = True
 
+class MessageServerResponse(BaseModel):
+    message_create_response : Message
+    server_response : Message
+    class Config:
+        orm_mode = True
+
 
 class UserBase(BaseModel):
     username: str
