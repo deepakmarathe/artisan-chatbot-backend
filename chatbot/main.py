@@ -3,6 +3,8 @@ from typing import List
 
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import Form
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -16,7 +18,19 @@ from database import SessionLocal, engine
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
 
+
 app = FastAPI()
+
+# Add CORS middleware to allow requests from the frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Adjust the origin as needed
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
+
+
 
 # Authentication setup
 SECRET_KEY = "your_secret_key"
@@ -80,6 +94,15 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Username already registered")
     return crud.create_user(db=db, user=user)
 
+
+
+@app.post("/register-form", response_model=schemas.User)
+def register_user_form(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_username(db, username=username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    user = schemas.UserCreate(username=username, password=password)
+    return crud.create_user(db=db, user=user)
 
 @app.post("/token", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
