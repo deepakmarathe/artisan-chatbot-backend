@@ -137,7 +137,7 @@ def create_message(message: schemas.MessageCreate, db: Session = Depends(get_db)
 
     # generate code to insert a new message record into the database, corresponding to the servers response
     server_message = schemas.MessageCreate(content="Server says: " + message.content)
-    server_response = crud.create_message(db=db, message=server_message, user_id=0)
+    server_response = crud.create_message(db=db, message=server_message, user_id=current_user.id)
 
     res = {"message_create_response": create_message_response, "server_response": server_response}
     print(res)
