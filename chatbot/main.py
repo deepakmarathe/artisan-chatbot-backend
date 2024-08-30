@@ -148,7 +148,12 @@ def create_message(message: schemas.MessageCreate, db: Session = Depends(get_db)
 def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
                   current_user: models.User = Depends(get_current_user)):
     messages = crud.get_messages(db, user_id=current_user.id, skip=skip, limit=limit)
+
+    if not isinstance(messages, list):
+        messages = list(messages)
+
     return messages
+
 
 
 @app.put("/messages/{message_id}", response_model=schemas.Message)
