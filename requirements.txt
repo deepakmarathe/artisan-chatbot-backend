@@ -2,5 +2,5 @@
 fastapi
 uvicorn
 passlib
-jose
+pyjwt
 sqlalchemy
