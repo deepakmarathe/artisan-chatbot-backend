@@ -11,12 +11,14 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from .crud import create_message, get_messages, get_message, update_message, delete_message
-import models
-import schemas
-from database import SessionLocal, engine
+from .models import User, Message
+from .schemas import UserCreate, MessageCreate, MessageUpdate, Token, User
+from .database import SessionLocal, engine
+
+from .database import Base
 
 # Create the database tables
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 token_blacklist = set()
 
@@ -153,7 +155,6 @@ def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
         messages = list(messages)
 
     return messages
-
 
 
 @app.put("/messages/{message_id}", response_model=schemas.Message)
