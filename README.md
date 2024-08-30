@@ -11,18 +11,18 @@ This is a backend application built using FastAPI, a modern, fast (high-performa
 1. Clone the repository:
     ```sh
     git clone https://github.com/yourusername/artisan-chatbot-backend.git
-    cd artisan-app-backend
+    cd artisan-chatbot-backend
     ```
 
 2. Create a virtual environment:
     ```sh
-    python -m venv venv
+    python3.9 -m venv .venv
     source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
 
 3. Install the dependencies:
     ```sh
-    pip install -r requirements.txt
+    pip3.9 install -r requirements.txt
     ```
 
 ## Running the Application
