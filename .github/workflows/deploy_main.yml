@@ -2,7 +2,7 @@ name: Django CI - Deploy to EC2 🚀
 
 on:
   push:
-    branches: ["main"]
+    branches: ["feature/cicd_actions", "main"]
 
 jobs:
   build:
