@@ -10,7 +10,7 @@ import jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-import crud
+from .crud import create_message, get_messages, get_message, update_message, delete_message
 import models
 import schemas
 from database import SessionLocal, engine
