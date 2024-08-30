@@ -8,11 +8,11 @@ from .schemas import UserCreate, MessageCreate, MessageUpdate
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_user_by_username(db: Session, username: str):
+def get_user_by_username_crud(db: Session, username: str):
     return db.query(User).filter(User.username == username).first()
 
 
-def create_user(db: Session, user: UserCreate):
+def create_user_crud(db: Session, user: UserCreate):
     hashed_password = pwd_context.hash(user.password)
     db_user = User(username=user.username, hashed_password=hashed_password)
     db.add(db_user)
@@ -21,7 +21,7 @@ def create_user(db: Session, user: UserCreate):
     return db_user
 
 
-def authenticate_user(db: Session, username: str, password: str):
+def authenticate_user_crud(db: Session, username: str, password: str):
     user = get_user_by_username(db, username)
     if not user:
         return False
@@ -30,7 +30,7 @@ def authenticate_user(db: Session, username: str, password: str):
     return user
 
 
-def create_message(db: Session, message: MessageCreate, user_id: int):
+def create_message_crud(db: Session, message: MessageCreate, user_id: int):
     db_message = Message(**message.dict(), user_id=user_id)
     db.add(db_message)
     db.commit()
@@ -42,12 +42,12 @@ def get_messages(db: Session, user_id: int, skip: int = 0, limit: int = 10):
     return db.query(Message).filter(Message.user_id == user_id).offset(skip).limit(limit)
 
 
-def get_message(db: Session, message_id: int):
+def get_message_crud(db: Session, message_id: int):
     return db.query(Message).filter(Message.id == message_id).first()
 
 
-def update_message(db: Session, message: MessageUpdate, message_id: int):
-    db_message = get_message(db, message_id)
+def update_message_crud(db: Session, message: MessageUpdate, message_id: int):
+    db_message = get_message_crud(db, message_id)
     if db_message:
         db_message.content = message.content
         db.commit()
@@ -55,7 +55,7 @@ def update_message(db: Session, message: MessageUpdate, message_id: int):
     return db_message
 
 
-def delete_message(db: Session, message_id: int):
+def delete_message_crud(db: Session, message_id: int):
     db_message = get_message(db, message_id)
     if db_message:
         db.delete(db_message)

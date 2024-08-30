@@ -1,21 +1,22 @@
 from datetime import datetime, timedelta
 from typing import List
 
+import jwt
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi import Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from .crud import create_message, get_messages, get_message, update_message, delete_message
-from .models import User, Message
-from .schemas import UserCreate, MessageCreate, MessageUpdate, Token, User, MessageServerResponse
-from .database import SessionLocal, engine
-
+from chatbot.crud import delete_message_crud, get_message_crud, update_message_crud, create_message_crud, \
+    authenticate_user_crud, get_user_by_username_crud, create_user_crud
 from .database import Base
+from .database import SessionLocal, engine
+# from .crud import create_message, get_messages, get_message, update_message, delete_message
+from .models import Message
+from .schemas import UserCreate, MessageCreate, MessageUpdate, Token, User, MessageServerResponse
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
@@ -84,7 +85,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
             raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
-    user = crud.get_user_by_username(db, username=username)
+    user = get_user_by_username_crud(db, username=username)
     if user is None:
         raise credentials_exception
     return user
@@ -92,24 +93,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
 @app.post("/register", response_model=User)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_username(db, username=user.username)
+    db_user = get_user_by_username_crud(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    return crud.create_user(db=db, user=user)
+    return create_user_crud(db=db, user=user)
 
 
 @app.post("/register-form", response_model=User)
 def register_user_form(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
-    db_user = crud.get_user_by_username(db, username=username)
+    db_user = get_user_by_username_crud(db, username=username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
     user = UserCreate(username=username, password=password)
-    return crud.create_user(db=db, user=user)
+    return create_user_crud(db=db, user=user)
 
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = crud.authenticate_user(db, username=form_data.username, password=form_data.password)
+    user = authenticate_user_crud(db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -135,11 +136,11 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db),
                    current_user: User = Depends(get_current_user)):
     import time
     time.sleep(4)
-    create_message_response = crud.create_message(db=db, message=message, user_id=current_user.id)
+    create_message_response = create_message_crud(db=db, message=message, user_id=current_user.id)
 
     # generate code to insert a new message record into the database, corresponding to the servers response
     server_message = MessageCreate(content="Server says: " + message.content)
-    server_response = crud.create_message(db=db, message=server_message, user_id=current_user.id)
+    server_response = create_message_crud(db=db, message=server_message, user_id=current_user.id)
 
     res = {"message_create_response": create_message_response, "server_response": server_response}
     print(res)
@@ -149,7 +150,7 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db),
 @app.get("/messages/", response_model=List[Message])
 def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
                   current_user: User = Depends(get_current_user)):
-    messages = crud.get_messages(db, user_id=current_user.id, skip=skip, limit=limit)
+    messages = get_message_crud(db, user_id=current_user.id, skip=skip, limit=limit)
 
     if not isinstance(messages, list):
         messages = list(messages)
@@ -160,23 +161,23 @@ def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
 @app.put("/messages/{message_id}", response_model=Message)
 def update_message(message_id: int, message: MessageUpdate, db: Session = Depends(get_db),
                    current_user: User = Depends(get_current_user)):
-    db_message = crud.get_message(db, message_id=message_id)
+    db_message = get_message_crud(db, message_id=message_id)
     if db_message is None:
         raise HTTPException(status_code=404, detail="Message not found")
     if db_message.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to update this message")
-    return crud.update_message(db=db, message=message, message_id=message_id)
+    return update_message_crud(db=db, message=message, message_id=message_id)
 
 
 @app.delete("/messages/{message_id}", response_model=Message)
 def delete_message(message_id: int, db: Session = Depends(get_db),
                    current_user: User = Depends(get_current_user)):
-    db_message = crud.get_message(db, message_id=message_id)
+    db_message = get_message_crud(db, message_id=message_id)
     if db_message is None:
         raise HTTPException(status_code=404, detail="Message not found")
     if db_message.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this message")
-    return crud.delete_message(db=db, message_id=message_id)
+    return delete_message_crud(db=db, message_id=message_id)
 
 
 if __name__ == "__main__":
