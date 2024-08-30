@@ -9,4 +9,4 @@
 PORT=8000 
 lsof -i :$PORT -t | xargs kill -9
 
-uvicorn chatbot.main:app --reload --port $PORT --host 0.0.0.0 --log-level debug
+uvicorn chatbot.main:app --reload --port $PORT --host 0.0.0.0 --log-level debug &
