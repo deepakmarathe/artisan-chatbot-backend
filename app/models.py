@@ -1,15 +1,15 @@
 from datetime import datetime
 
-import dotenv
+from dotenv import load_dotenv
 
-dotenv.load_dotenv()
+load_dotenv()
 
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
 # from app.database import Base
-from app.database import Base
-
+# from app.database import Base
+from database import Base
 
 class User(Base):
     __tablename__ = "users"
