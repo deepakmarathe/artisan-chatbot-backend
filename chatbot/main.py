@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from .crud import create_message, get_messages, get_message, update_message, delete_message
 from .models import User, Message
-from .schemas import UserCreate, MessageCreate, MessageUpdate, Token, User
+from .schemas import UserCreate, MessageCreate, MessageUpdate, Token, User, MessageServerResponse
 from .database import SessionLocal, engine
 
 from .database import Base
@@ -82,7 +82,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except JWTError:
+    except jwt.PyJWTError:
         raise credentials_exception
     user = crud.get_user_by_username(db, username=username)
     if user is None:
@@ -90,24 +90,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 
-@app.post("/register", response_model=schemas.User)
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@app.post("/register", response_model=User)
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
     return crud.create_user(db=db, user=user)
 
 
-@app.post("/register-form", response_model=schemas.User)
+@app.post("/register-form", response_model=User)
 def register_user_form(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     db_user = crud.get_user_by_username(db, username=username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    user = schemas.UserCreate(username=username, password=password)
+    user = UserCreate(username=username, password=password)
     return crud.create_user(db=db, user=user)
 
 
-@app.post("/token", response_model=schemas.Token)
+@app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = crud.authenticate_user(db, username=form_data.username, password=form_data.password)
     if not user:
@@ -130,15 +130,15 @@ async def logout(token: str = Depends(oauth2_scheme)):
 
 
 # @app.post("/messages/", response_model=schemas.Message)
-@app.post("/messages/", response_model=schemas.MessageServerResponse)
-def create_message(message: schemas.MessageCreate, db: Session = Depends(get_db),
-                   current_user: models.User = Depends(get_current_user)):
+@app.post("/messages/", response_model=MessageServerResponse)
+def create_message(message: MessageCreate, db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
     import time
     time.sleep(4)
     create_message_response = crud.create_message(db=db, message=message, user_id=current_user.id)
 
     # generate code to insert a new message record into the database, corresponding to the servers response
-    server_message = schemas.MessageCreate(content="Server says: " + message.content)
+    server_message = MessageCreate(content="Server says: " + message.content)
     server_response = crud.create_message(db=db, message=server_message, user_id=current_user.id)
 
     res = {"message_create_response": create_message_response, "server_response": server_response}
@@ -146,9 +146,9 @@ def create_message(message: schemas.MessageCreate, db: Session = Depends(get_db)
     return res
 
 
-@app.get("/messages/", response_model=List[schemas.Message])
+@app.get("/messages/", response_model=List[Message])
 def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
-                  current_user: models.User = Depends(get_current_user)):
+                  current_user: User = Depends(get_current_user)):
     messages = crud.get_messages(db, user_id=current_user.id, skip=skip, limit=limit)
 
     if not isinstance(messages, list):
@@ -157,9 +157,9 @@ def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
     return messages
 
 
-@app.put("/messages/{message_id}", response_model=schemas.Message)
-def update_message(message_id: int, message: schemas.MessageUpdate, db: Session = Depends(get_db),
-                   current_user: models.User = Depends(get_current_user)):
+@app.put("/messages/{message_id}", response_model=Message)
+def update_message(message_id: int, message: MessageUpdate, db: Session = Depends(get_db),
+                   current_user: User = Depends(get_current_user)):
     db_message = crud.get_message(db, message_id=message_id)
     if db_message is None:
         raise HTTPException(status_code=404, detail="Message not found")
@@ -168,9 +168,9 @@ def update_message(message_id: int, message: schemas.MessageUpdate, db: Session 
     return crud.update_message(db=db, message=message, message_id=message_id)
 
 
-@app.delete("/messages/{message_id}", response_model=schemas.Message)
+@app.delete("/messages/{message_id}", response_model=Message)
 def delete_message(message_id: int, db: Session = Depends(get_db),
-                   current_user: models.User = Depends(get_current_user)):
+                   current_user: User = Depends(get_current_user)):
     db_message = crud.get_message(db, message_id=message_id)
     if db_message is None:
         raise HTTPException(status_code=404, detail="Message not found")
