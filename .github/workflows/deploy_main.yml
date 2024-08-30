@@ -33,8 +33,9 @@ jobs:
         echo "${{ secrets.EC2_SSH_KEY }}" > private_key && chmod 600 private_key
         ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
             cd /home/ubuntu/api &&
+            python3.9 -m venv .venv &&
             source .venv/bin/activate &&
-            pip install -r requirements.txt &&
+            pip3.9 install -r requirements.txt &&
             uvicorn chatbot.main:app --reload
         '
         echo "Server started"
