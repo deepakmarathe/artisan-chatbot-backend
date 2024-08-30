@@ -11,7 +11,7 @@ This is a backend application built using FastAPI, a modern, fast (high-performa
 1. Clone the repository:
     ```sh
     git clone https://github.com/yourusername/artisan-chatbot-backend.git
-    cd artisan-chatbot-backend
+    cd artisan-app-backend
     ```
 
 2. Create a virtual environment:

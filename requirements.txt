@@ -4,3 +4,6 @@ uvicorn
 passlib
 jose
 sqlalchemy
+pytest
+dotenv
+bcrypt
