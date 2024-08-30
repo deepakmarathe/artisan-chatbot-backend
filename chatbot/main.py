@@ -10,12 +10,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from crud import (delete_message_crud, get_message_crud, update_message_crud, create_message_crud,
+from .crud import (delete_message_crud, get_message_crud, update_message_crud, create_message_crud,
                   authenticate_user_crud, get_user_by_username_crud, create_user_crud, get_messages_crud)
-from database import Base
-from database import SessionLocal, engine
+from .database import Base
+from .database import SessionLocal, engine
 
-from schemas import UserCreate, MessageCreate, MessageUpdate, Token, User, MessageServerResponse, Message
+from .schemas import UserCreate, MessageCreate, MessageUpdate, Token, User, MessageServerResponse, Message
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
