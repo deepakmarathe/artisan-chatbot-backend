@@ -35,9 +35,10 @@ jobs:
             cd /home/ubuntu/api &&
             python3 -m venv .venv &&
             source .venv/bin/activate &&
-            pip3 install -r requirements.txt &&
+            sudo python3.9 -m pip install -r requirements.txt  &&
+            python3.9 -m pip install -r requirements.txt &&
             lsof -i :8000 -t | xargs kill -9 && 
-            uvicorn chatbot.main:app --reload --port 80 --host 0.0.0.0 --log-level debug &
+            uvicorn chatbot.main:app --reload --port 8000 --host 0.0.0.0 --log-level debug &
         '
         echo "Server started"
 
