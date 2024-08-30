@@ -10,13 +10,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from chatbot.crud import delete_message_crud, get_message_crud, update_message_crud, create_message_crud, \
-    authenticate_user_crud, get_user_by_username_crud, create_user_crud
-from .database import Base
-from .database import SessionLocal, engine
-# from .crud import create_message, get_messages, get_message, update_message, delete_message
-from .models import Message
-from .schemas import UserCreate, MessageCreate, MessageUpdate, Token, User, MessageServerResponse
+from crud import (delete_message_crud, get_message_crud, update_message_crud, create_message_crud,
+                  authenticate_user_crud, get_user_by_username_crud, create_user_crud, get_messages_crud)
+from database import Base
+from database import SessionLocal, engine
+
+from schemas import UserCreate, MessageCreate, MessageUpdate, Token, User, MessageServerResponse, Message
 
 # Create the database tables
 Base.metadata.create_all(bind=engine)
@@ -150,10 +149,10 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db),
 @app.get("/messages/", response_model=List[Message])
 def read_messages(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
                   current_user: User = Depends(get_current_user)):
-    messages = get_message_crud(db, user_id=current_user.id, skip=skip, limit=limit)
+    messages = get_messages_crud(db, user_id=current_user.id, skip=skip, limit=limit)
 
-    if not isinstance(messages, list):
-        messages = list(messages)
+    # if not isinstance(messages, list):
+    #     messages = list(messages)
 
     return messages
 
