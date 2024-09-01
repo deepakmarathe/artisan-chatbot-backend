@@ -139,7 +139,7 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db),
 
     # generate code to insert a new message record into the database, corresponding to the servers response
     server_message = MessageCreate(content="Server says: " + message.content)
-    server_response = create_message_crud(db=db, message=server_message, user_id=current_user.id)
+    server_response = create_message_crud(db=db, message=server_message, user_id=0)
 
     res = {"message_create_response": create_message_response, "server_response": server_response}
     print(res)
